@@ -795,7 +795,7 @@ local function drawAbout()
   header("About", "Image Burner")
 
   -- animated logo: pulsing rings, breathing disc, counter-rotating arcs
-  local cx, cy = 168, 214
+  local cx, cy = 158, 214
   for i = 1, 3 do
     local ph = (t * 0.45 + i * 0.33) % 1
     setColor(COL.accent, (1 - ph) * 0.22 * fade)
@@ -817,7 +817,7 @@ local function drawAbout()
   love.graphics.printf("IB", cx - 60, cy - 16, 120, "center")
 
   -- details
-  local x, y = 300, 150
+  local x, y = 288, 150
   love.graphics.setFont(FONT_L)
   setColor(COL.fg, fade)
   love.graphics.print("Image Burner", x, y)
@@ -849,9 +849,12 @@ local function drawAbout()
     love.graphics.setFont(FONT_S)
     setColor(COL.faint, fade)
     love.graphics.print(row[1], x, ry)
-    love.graphics.setFont(FONT)
+    local maxw = W - PAD - x
+    local vf = FONT
+    if vf:getWidth(row[2]) > maxw then vf = FONT_S end
+    love.graphics.setFont(vf)
     setColor(row[3], fade)
-    love.graphics.print(ellipsize(row[2], FONT, W - PAD - x), x, ry + 18)
+    love.graphics.print(ellipsize(row[2], vf, maxw), x, ry + 18)
     ry = ry + 48
   end
 
