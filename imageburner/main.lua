@@ -566,20 +566,25 @@ function love.update(dt)
 
   -- dev-only: render each screen for ~1s and save a PNG to /tmp, then quit
   if shotList then
+    if shotIndex > #shotList then
+      love.event.quit()
+      return
+    end
+    if state ~= shotList[shotIndex] then
+      -- enter the next screen and let it settle before capturing
+      state = shotList[shotIndex]
+      shotTimer = 1.1
+      return
+    end
     shotTimer = shotTimer - dt
     if shotTimer <= 0 then
-      if shotIndex <= #shotList then
-        local s = shotList[shotIndex]
-        love.graphics.captureScreenshot(function(id)
-          local f = io.open("/tmp/ibshot_" .. s .. ".png", "wb")
-          if f then f:write(id:encode("png"):getString()); f:close() end
-        end)
-        shotIndex = shotIndex + 1
-        if shotIndex <= #shotList then state = shotList[shotIndex] end
-      else
-        love.event.quit()
-      end
-      shotTimer = 1.0
+      local s = shotList[shotIndex]
+      love.graphics.captureScreenshot(function(id)
+        local f = io.open("/tmp/ibshot_" .. s .. ".png", "wb")
+        if f then f:write(id:encode("png"):getString()); f:close() end
+      end)
+      shotIndex = shotIndex + 1
+      shotTimer = 0.6
     end
     return
   end
