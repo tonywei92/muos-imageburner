@@ -34,11 +34,22 @@ formatter.kinds = {
 -- Cluster / block size choices. v = sectors (FAT), b = bytes (others). nil label = Auto.
 function formatter.clusterOptions(fs)
   if fs.kind == "fat" then
-    return {
+    -- Windows only accepts FAT12 up to 4K, FAT32 up to 32K clusters; FAT16 up to 64K.
+    local opts = {
       { label = "Auto" }, { label = "512 B", v = 1 }, { label = "1 KB", v = 2 },
-      { label = "2 KB", v = 4 }, { label = "4 KB", v = 8 }, { label = "8 KB", v = 16 },
-      { label = "16 KB", v = 32 }, { label = "32 KB", v = 64 }, { label = "64 KB", v = 128 },
+      { label = "2 KB", v = 4 }, { label = "4 KB", v = 8 },
     }
+    if fs.bits == 16 then
+      opts[#opts + 1] = { label = "8 KB", v = 16 }
+      opts[#opts + 1] = { label = "16 KB", v = 32 }
+      opts[#opts + 1] = { label = "32 KB", v = 64 }
+      opts[#opts + 1] = { label = "64 KB", v = 128 }
+    elseif fs.bits == 32 then
+      opts[#opts + 1] = { label = "8 KB", v = 16 }
+      opts[#opts + 1] = { label = "16 KB", v = 32 }
+      opts[#opts + 1] = { label = "32 KB", v = 64 }
+    end
+    return opts
   elseif fs.kind == "exfat" then
     return {
       { label = "Auto" }, { label = "4 KB", b = 4096 }, { label = "8 KB", b = 8192 },

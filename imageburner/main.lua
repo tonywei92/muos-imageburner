@@ -44,8 +44,12 @@ local heldDir, holdTimer = nil, 0
 local prevA, prevB = false, false
 local prevL, prevR = false, false
 
--- formatter option state
-local fmt = { fsIndex = 1, clusterIndex = 1, layout = 1, mode = 1, row = 1 }
+-- formatter option state (default filesystem: exFAT, the best choice for SD cards)
+local defaultFs = 1
+for i, f in ipairs(formatter.kinds) do
+  if f.id == "exfat" then defaultFs = i end
+end
+local fmt = { fsIndex = defaultFs, clusterIndex = 1, layout = 1, mode = 1, row = 1 }
 local formatStatus = nil
 
 local function currentFs()
