@@ -38,6 +38,21 @@ function burner.humanSize(n)
   return tostring(math.floor(n)) .. " B"
 end
 
+-- File size without reading the file. BusyBox `wc -c < file` reads the whole
+-- file, so never use it for large images; seek("end") is O(1).
+function burner.fileSize(path)
+  local f = io.open(path, "rb")
+  if not f then return nil end
+  local n = f:seek("end")
+  f:close()
+  return n
+end
+
+local function joinPath(dir, name)
+  if dir:sub(-1) == "/" then return dir .. name end
+  return dir .. "/" .. name
+end
+
 -- "/dev/mmcblk0p5" -> "mmcblk0", "/dev/sda1" -> "sda", "/dev/nvme0n1p2" -> "nvme0n1"
 local function baseDisk(src)
   local name = src and src:match("/dev/(.+)$")
@@ -121,16 +136,16 @@ end
 function burner.listDir(path)
   local cmd = "cd " .. burner.sq(path) .. " && for f in * .[!.]*; do " ..
     "[ -e \"$f\" ] || continue; " ..
-    "if [ -d \"$f\" ]; then printf 'D\\t0\\t%s\\n' \"$f\"; " ..
-    "else printf 'F\\t%s\\t%s\\n' \"$(wc -c < \"$f\" 2>/dev/null || echo 0)\" \"$f\"; fi; done"
+    "if [ -d \"$f\" ]; then printf 'D\\t%s\\n' \"$f\"; " ..
+    "else printf 'F\\t%s\\n' \"$f\"; fi; done"
   local out = burner.exec(cmd)
   local dirs, files = {}, {}
   for line in out:gmatch("[^\n]+") do
-    local kind, size, name = line:match("^(%a)\t(%d+)\t(.*)$")
+    local kind, name = line:match("^(%a)\t(.*)$")
     if kind == "D" then
       dirs[#dirs + 1] = { kind = "dir", name = name }
     elseif kind == "F" and isImage(name) then
-      files[#files + 1] = { kind = "file", name = name, size = tonumber(size) }
+      files[#files + 1] = { kind = "file", name = name, size = burner.fileSize(joinPath(path, name)) }
     end
   end
   table.sort(dirs, function(a, b) return a.name:lower() < b.name:lower() end)
@@ -153,8 +168,7 @@ function burner.imageSize(path)
     local u = out:match("\ntotals\t%d+\t%d+\t%d+\t(%d+)")
     return tonumber(u)
   else
-    local out = burner.exec("wc -c < " .. burner.sq(path))
-    return tonumber(trim(out))
+    return burner.fileSize(path)
   end
 end
 

@@ -430,6 +430,13 @@ function love.load()
       print(string.format("  %s %s %s", it.kind, it.name, it.size and burner.humanSize(it.size) or ""))
     end
 
+    local imgs = burner.listDir("/mnt/mmc/IMAGES")
+    print("[selftest] browse /mnt/mmc/IMAGES -> " .. #imgs .. " entries")
+    for i = 1, #imgs do
+      print(string.format("  %s %s %s", imgs[i].kind, imgs[i].name,
+        imgs[i].size and burner.humanSize(imgs[i].size) or ""))
+    end
+
     local function exists(p)
       local f = io.open(p, "r")
       if f then f:close(); return true end
