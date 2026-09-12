@@ -1,0 +1,20 @@
+# Build outputs (large GPL binaries produced by build/*.sh)
+build/mke2fs
+build/mkntfs
+build/tune2fs
+build/configure.log
+build/make.log
+build/static.log
+
+# LÖVE runtime, obtained on-device (see BUILD.md)
+/love
+/libs/
+
+# Packaged games
+*.love
+
+# Editors / OS
+.DS_Store
+Thumbs.db
+*.swp
+*~
