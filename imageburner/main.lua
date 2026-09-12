@@ -681,6 +681,21 @@ local function drawList(items, index, top, y0, renderer)
   return top
 end
 
+-- Trim text to fit maxw, adding "..." when it doesn't.
+local function ellipsize(text, font, maxw)
+  if not text or maxw <= 0 then return text or "" end
+  if font:getWidth(text) <= maxw then return text end
+  local ell = "..."
+  local ew = font:getWidth(ell)
+  local lo, hi = 0, #text
+  while lo < hi do
+    local mid = math.floor((lo + hi + 1) / 2)
+    if font:getWidth(text:sub(1, mid)) + ew <= maxw then lo = mid else hi = mid - 1 end
+  end
+  if lo <= 0 then return ell end
+  return text:sub(1, lo) .. ell
+end
+
 local SEL_TXT = COL.dark
 local SEL_SUB = { 0.24, 0.20, 0.11 }
 
@@ -742,9 +757,10 @@ local function drawImgMenu()
     setColor(sel and SEL_TXT or COL.fg)
     love.graphics.print(it.label, x, y)
     if it.value then
+      local valueMax = W - PAD * 2 - 70 - FONT:getWidth(it.label) - 24
       love.graphics.setFont(FONT_S)
       setColor(sel and SEL_SUB or COL.muted)
-      love.graphics.printf(it.value, x, y + 4, W - PAD * 2 - 70, "right")
+      love.graphics.printf(ellipsize(it.value, FONT_S, valueMax), x, y + 4, W - PAD * 2 - 70, "right")
     end
     chevron(x + W - PAD * 2 - 40, y + 10, sel and COL.dark or COL.faint)
   end)
@@ -769,16 +785,18 @@ local function drawBrowser()
         setColor(sel and COL.dark or COL.accent)
         love.graphics.rectangle("fill", x + 2, y + 2, 18, 14, 4, 4)
         setColor(sel and SEL_TXT or COL.fg)
-        love.graphics.print(it.name, x + 30, y)
+        love.graphics.print(ellipsize(it.name, FONT, W - PAD * 2 - 40 - 30), x + 30, y)
       else
         setColor(sel and COL.dark or COL.accent)
         love.graphics.circle("fill", x + 11, y + 9, 9)
         setColor(sel and COL.dark or COL.panel); love.graphics.circle("fill", x + 11, y + 9, 3)
+        local sizeText = burner.humanSize(it.size)
+        local nameMax = W - PAD * 2 - 40 - 30 - FONT_S:getWidth(sizeText) - 16
         setColor(sel and SEL_TXT or COL.fg)
-        love.graphics.print(it.name, x + 30, y)
+        love.graphics.print(ellipsize(it.name, FONT, nameMax), x + 30, y)
         love.graphics.setFont(FONT_S)
         setColor(sel and SEL_SUB or COL.muted)
-        love.graphics.printf(burner.humanSize(it.size), x, y + 4, W - PAD * 2 - 40, "right")
+        love.graphics.printf(sizeText, x, y + 4, W - PAD * 2 - 40, "right")
       end
     end)
   end
@@ -821,7 +839,8 @@ local function infoCard(y, lines)
     love.graphics.print(l[1], PAD + 18, ty + 4)
     setColor(COL.fg)
     love.graphics.setFont(FONT)
-    love.graphics.printf(l[2], PAD + 18, ty, W - PAD * 2 - 36, "right")
+    local labelW = FONT_S:getWidth(l[1])
+    love.graphics.printf(ellipsize(l[2], FONT, W - PAD * 2 - 36 - labelW - 24), PAD + 18, ty, W - PAD * 2 - 36, "right")
     ty = ty + 26
   end
 end
