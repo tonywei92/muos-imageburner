@@ -38,7 +38,7 @@ done
 
 [ -n "$OUT" ] || OUT="$REPO/build/ImageBurner-$VERSION.muxapp"
 STAGE=$(mktemp -d)
-DEST="$STAGE/application/$APP_NAME"
+DEST="$STAGE/$APP_NAME"
 trap 'rm -rf "$STAGE"' EXIT
 
 mkdir -p "$DEST/imageburner/tools" "$DEST/libs" "$DEST/licenses"
@@ -53,11 +53,13 @@ cp "$REPO/LICENSE.md" "$DEST/licenses/LICENSE.md"
 
 chmod 755 "$DEST/love" "$DEST/mux_launch.sh" "$DEST/imageburner/tools/"*
 
+# .muxapp extracts straight into the applications directory, so the app folder
+# itself is the archive root (no `application/` wrapper — that is for .muxzip).
 rm -f "$OUT"
 if command -v zip >/dev/null 2>&1; then
-  ( cd "$STAGE" && zip -qr "$OUT" application )
+  ( cd "$STAGE" && zip -qr "$OUT" "$APP_NAME" )
 elif command -v python3 >/dev/null 2>&1; then
-  ( cd "$STAGE" && python3 -m zipfile -c "$OUT" application )
+  ( cd "$STAGE" && python3 -m zipfile -c "$OUT" "$APP_NAME" )
 else
   echo "error: need 'zip' or 'python3' to create the archive" >&2; exit 1
 fi

@@ -123,10 +123,12 @@ Applications.
 
 ## 4. Packaging a `.muxapp` release
 
-A `.muxapp` is an ordinary zip with a top-level `application/` folder. muOS's
-Archive Manager extracts that into the user-applications path, so the whole
-install is: copy the file to `/mnt/mmc/ARCHIVE`, open **Applications → Archive
-Manager**, select it, install.
+A `.muxapp` is an ordinary zip whose **root contains the app folder**
+(`Image Burner/`). muOS's Archive Manager extracts a `.muxapp` straight into the
+user-applications path, so the whole install is: copy the file to
+`/mnt/mmc/ARCHIVE`, open **Applications → Archive Manager**, select it, install.
+(Do **not** wrap the app in an `application/` folder — that shortcut is only for
+`.muxzip` archives, and using it with `.muxapp` nests the app one level too deep.)
 
 Build the archive with [`build/package.sh`](build/package.sh), which assembles
 the repo sources plus the LÖVE runtime and the static tools:
@@ -141,7 +143,7 @@ build/package.sh --love-dir /path/to/love-runtime --version 1.0.0
 The archive contains:
 
 ```
-application/Image Burner/
+Image Burner/
 ├── love, libs/, mux_launch.sh, mux_lang.ini
 ├── imageburner/*.lua
 ├── imageburner/tools/{mke2fs,mkntfs,tune2fs}
