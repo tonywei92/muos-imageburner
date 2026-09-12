@@ -40,6 +40,7 @@ local APP_URL = "github.com/tonywei92/muos-imageburner"
 local anim = 0            -- seconds since launch, drives animations
 local aboutEnter = 0      -- time the About screen was opened (for fade-in)
 local particles = {}
+local shotList, shotIndex, shotTimer  -- dev-only screenshot capture mode (IB_SHOT=1)
 local source = nil      -- image path
 local dest = nil        -- disk table
 local browser = { path = "/mnt/mmc", items = {}, index = 1, top = 1 }
@@ -543,6 +544,14 @@ function love.load()
   end
   refreshDisks()
   loadBrowser(browser.path)
+
+  if os.getenv("IB_SHOT") == "1" then
+    source = "/mnt/mmc/IMAGES/MustardOS_RG40XX-H_2601.1_FUNKY_JACARANDA-bc38efa0.img"
+    dest = { dev = "/dev/mmcblk1", name = "mmcblk1", size = 64000000000 }
+    shotList = { "home", "imgmenu", "formatopts", "about" }
+    shotIndex, shotTimer = 1, 1.0
+    state = shotList[1]
+  end
 end
 
 function love.update(dt)
@@ -553,6 +562,26 @@ function love.update(dt)
       p.y = H + 4
       p.x = math.random() * W
     end
+  end
+
+  -- dev-only: render each screen for ~1s and save a PNG to /tmp, then quit
+  if shotList then
+    shotTimer = shotTimer - dt
+    if shotTimer <= 0 then
+      if shotIndex <= #shotList then
+        local s = shotList[shotIndex]
+        love.graphics.captureScreenshot(function(id)
+          local f = io.open("/tmp/ibshot_" .. s .. ".png", "wb")
+          if f then f:write(id:encode("png"):getString()); f:close() end
+        end)
+        shotIndex = shotIndex + 1
+        if shotIndex <= #shotList then state = shotList[shotIndex] end
+      else
+        love.event.quit()
+      end
+      shotTimer = 1.0
+    end
+    return
   end
 
   -- direction repeat

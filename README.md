@@ -37,6 +37,16 @@ Image Burner
 - Target partitions are unmounted before writing/formatting.
 - Image-larger-than-card is rejected up front.
 
+## Screenshots
+
+| Home | Image Tool |
+| --- | --- |
+| ![Home screen](docs/screenshots/home.png) | ![Image Tool screen](docs/screenshots/image-tool.png) |
+
+| Formatter | About |
+| --- | --- |
+| ![Formatter screen](docs/screenshots/formatter.png) | ![About screen](docs/screenshots/about.png) |
+
 ## Requirements
 - An Anbernic H700 device running **muOS 2601.0 (Jacaranda)** or newer.
 - An SD card inserted in the second slot for use as the target (SD2 → `/dev/mmcblk1`).
