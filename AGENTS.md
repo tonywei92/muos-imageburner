@@ -38,6 +38,7 @@ LD_LIBRARY_PATH="$PWD/libs" IB_FMTTEST=1 IB_FMTDEV=/dev/loop0 IB_FMTLAYOUT=mbr I
 - Formatter tools resolve at runtime via `formatter.toolsDir()` = `love.filesystem.getSource() .. "/tools"` (i.e. on device: `imageburner/tools/`).
 - Built-in tools: `/sbin/mkfs.fat` (FAT), `/usr/sbin/mkfs.exfat` (exFAT). Bundled static tools: `tools/mke2fs` (EXT2/EXT3), `tools/mkntfs` (NTFS). BusyBox `mke2fs` can only make ext2 — do not rely on it for EXT3.
 - Tools are built with the musl cross-toolchain; see `BUILD.md`. The ntfs-3g build links dynamically and must be relinked static (`build/ntfs-relink.sh`).
+- Distribution is a `.muxapp` (plain zip, top-level `application/Image Burner/`) installed via muOS **Archive Manager** from `/mnt/mmc/ARCHIVE`. Build it with `build/package.sh --love-dir <dir with love+libs>`; it bundles the LÖVE runtime and tools (all gitignored). Never hand-edit the archive; rebuild.
 
 ## Style
 - Match the existing look: use `header`, `footer`, `drawList`, `infoCard`, `warnBand`, `drawProgressScreen`; colors come from `COL`.

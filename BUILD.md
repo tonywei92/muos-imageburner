@@ -118,3 +118,37 @@ cp glyph/burner.png "/opt/muos/share/theme/MustardOS/glyph/muxapp/burner.png"
 
 Reload the muOS front end (or reboot) and launch **Image Burner** from
 Applications.
+
+---
+
+## 4. Packaging a `.muxapp` release
+
+A `.muxapp` is an ordinary zip with a top-level `application/` folder. muOS's
+Archive Manager extracts that into the user-applications path, so the whole
+install is: copy the file to `/mnt/mmc/ARCHIVE`, open **Applications → Archive
+Manager**, select it, install.
+
+Build the archive with [`build/package.sh`](build/package.sh), which assembles
+the repo sources plus the LÖVE runtime and the static tools:
+
+```sh
+# --love-dir must contain 'love' and 'libs/' (copy them off a muOS install, see §1)
+# --tools-dir defaults to build/ (the outputs of §2)
+build/package.sh --love-dir /path/to/love-runtime --version 1.0.0
+# -> build/ImageBurner-1.0.0.muxapp
+```
+
+The archive contains:
+
+```
+application/Image Burner/
+├── love, libs/, mux_launch.sh, mux_lang.ini
+├── imageburner/*.lua
+├── imageburner/tools/{mke2fs,mkntfs,tune2fs}
+└── licenses/LICENSE.md
+```
+
+Attach the resulting `.muxapp` to a GitHub Release so users can download it.
+(Remember the bundled `love`/e2fsprogs/ntfs-3g binaries keep their own licenses —
+see [LICENSE.md](LICENSE.md).)
+

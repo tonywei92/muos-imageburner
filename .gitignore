@@ -13,6 +13,9 @@ build/static.log
 # Packaged games
 *.love
 
+# Built release archive
+*.muxapp
+
 # Editors / OS
 .DS_Store
 Thumbs.db

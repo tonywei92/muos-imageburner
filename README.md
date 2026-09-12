@@ -43,6 +43,20 @@ Image Burner
 
 ## Install
 
+### From a release (recommended)
+
+1. Download `ImageBurner-<version>.muxapp` from the
+   [Releases](https://github.com/tonywei92/muos-imageburner/releases) page.
+2. Copy it to `/mnt/mmc/ARCHIVE/` (SD1) or `/mnt/sdcard/ARCHIVE/` (SD2).
+3. On the device open **Applications → Archive Manager**, select the archive and
+   install it.
+4. Exit the Archive Manager and launch **Image Burner** from **Applications**.
+
+A `.muxapp` is a zip whose top-level `application/` folder muOS extracts into the
+user-applications path; the Archive Manager leaves the archive file in `ARCHIVE`.
+
+### From source
+
 The app lives in the muOS applications folder on SD1:
 
 ```sh
