@@ -33,6 +33,13 @@ local BG
 local state = "home"
 local homeIndex = 1
 local menuIndex = 1
+local APP_VERSION = "1.0.0"
+local APP_AUTHOR = "Tony Soekirman"
+local APP_EMAIL = "tonywei92@gmail.com"
+local APP_URL = "github.com/tonywei92/muos-imageburner"
+local anim = 0            -- seconds since launch, drives animations
+local aboutEnter = 0      -- time the About screen was opened (for fade-in)
+local particles = {}
 local source = nil      -- image path
 local dest = nil        -- disk table
 local browser = { path = "/mnt/mmc", items = {}, index = 1, top = 1 }
@@ -262,7 +269,7 @@ end
 local function doMove(dir)
   local n
   if state == "home" then
-    homeIndex = ((homeIndex - 1 + (dir == "up" and -1 or 1)) % 2) + 1
+    homeIndex = ((homeIndex - 1 + (dir == "up" and -1 or 1)) % 3) + 1
   elseif state == "imgmenu" then
     menuIndex = ((menuIndex - 1 + (dir == "up" and -1 or 1)) % 3) + 1
   elseif state == "browser" then
@@ -285,9 +292,12 @@ local function confirmAction()
     if homeIndex == 1 then
       menuIndex = 1
       state = "imgmenu"
-    else
+    elseif homeIndex == 2 then
       fmt.row = 1
       state = "formatopts"
+    else
+      aboutEnter = anim
+      state = "about"
     end
   elseif state == "imgmenu" then
     if menuIndex == 1 then
@@ -348,6 +358,8 @@ local function confirmAction()
     formatter.cancel()
     result = { ok = false, msg = "Format canceled." }
     state = "result"
+  elseif state == "about" then
+    state = "home"
   elseif state == "result" then
     state = "home"
   end
@@ -356,6 +368,8 @@ end
 local function backAction()
   if state == "home" then
     love.event.quit()
+  elseif state == "about" then
+    state = "home"
   elseif state == "imgmenu" then
     state = "home"
   elseif state == "browser" then
@@ -483,7 +497,7 @@ function love.load()
   local noop = function() end
   love.graphics = {
     setColor = noop, rectangle = noop, print = noop, printf = noop, setFont = noop,
-    setDefaultFilter = noop, circle = noop, line = noop, setLineWidth = noop, draw = noop,
+    setDefaultFilter = noop, circle = noop, line = noop, setLineWidth = noop, draw = noop, arc = noop,
     getWidth = function() return 720 end,
     getHeight = function() return 480 end,
     newFont = function() return { setFilter = noop, getWidth = function(_, s) return #tostring(s) * 8 end } end,
@@ -499,7 +513,7 @@ function love.load()
   loadBrowser("/mnt/mmc")
   local okall = true
   for _, s in ipairs({ "home", "imgmenu", "browser", "disks", "confirm", "result", "burning",
-                       "formatopts", "formatconfirm", "formatting" }) do
+                       "formatopts", "formatconfirm", "formatting", "about" }) do
     state = s
     local ok, err = pcall(love.draw)
     if not ok then okall = false end
@@ -518,11 +532,29 @@ function love.load()
   FONT_XL = love.graphics.newFont(46)
   BG = makeVgrad(H, COL.bg2, COL.bg1)
   love.graphics.setFont(FONT)
+  for i = 1, 18 do
+    particles[i] = {
+      x = math.random() * W,
+      y = math.random() * H,
+      r = 1 + math.random() * 2.5,
+      v = 8 + math.random() * 22,
+      a = 0.06 + math.random() * 0.12,
+    }
+  end
   refreshDisks()
   loadBrowser(browser.path)
 end
 
 function love.update(dt)
+  anim = anim + dt
+  for _, p in ipairs(particles) do
+    p.y = p.y - p.v * dt
+    if p.y < -4 then
+      p.y = H + 4
+      p.x = math.random() * W
+    end
+  end
+
   -- direction repeat
   local dir = heldDirection()
   if dir then
@@ -711,8 +743,9 @@ local function drawHome()
   local items = {
     { label = "Image Tool", desc = "Write an ISO / IMG to a card", glyph = "disc" },
     { label = "Formatter",  desc = "Create a filesystem on a card", glyph = "wrench" },
+    { label = "About",      desc = "Version, author and project link", glyph = "info" },
   }
-  local y, h = 118, 108
+  local y, h, gap = 96, 90, 16
   for i, it in ipairs(items) do
     local sel = (i == homeIndex)
     local x, w = PAD, W - PAD * 2
@@ -723,26 +756,106 @@ local function drawHome()
     else
       setColor(COL.panel); love.graphics.rectangle("fill", x, y, w, h, 16, 16)
     end
-    local gx, gy = x + 54, y + h / 2
-    setColor(sel and COL.dark or COL.panel2); love.graphics.circle("fill", gx, gy, 28)
+    local gx, gy = x + 50, y + h / 2
+    setColor(sel and COL.dark or COL.panel2); love.graphics.circle("fill", gx, gy, 26)
     if it.glyph == "disc" then
-      setColor(COL.accent); love.graphics.circle("fill", gx, gy, 15)
-      setColor(sel and COL.dark or COL.panel2); love.graphics.circle("fill", gx, gy, 6)
-    else
+      setColor(COL.accent); love.graphics.circle("fill", gx, gy, 14)
+      setColor(sel and COL.dark or COL.panel2); love.graphics.circle("fill", gx, gy, 5)
+    elseif it.glyph == "wrench" then
       setColor(COL.accent)
       love.graphics.setLineWidth(6)
-      love.graphics.line(gx - 12, gy - 12, gx + 12, gy + 12)
-      love.graphics.line(gx + 12, gy - 12, gx - 12, gy + 12)
+      love.graphics.line(gx - 11, gy - 11, gx + 11, gy + 11)
+      love.graphics.line(gx + 11, gy - 11, gx - 11, gy + 11)
       love.graphics.setLineWidth(1)
+    else
+      setColor(COL.accent); love.graphics.circle("fill", gx, gy, 14)
+      setColor(COL.dark); love.graphics.circle("fill", gx, gy - 5, 2.5)
+      love.graphics.rectangle("fill", gx - 2, gy - 1, 4, 9, 2, 2)
     end
     love.graphics.setFont(FONT_L)
-    setColor(sel and SEL_TXT or COL.fg); love.graphics.print(it.label, x + 98, y + 24)
+    setColor(sel and SEL_TXT or COL.fg); love.graphics.print(it.label, x + 90, y + 18)
     love.graphics.setFont(FONT_S)
-    setColor(sel and SEL_SUB or COL.muted); love.graphics.print(it.desc, x + 98, y + 62)
+    setColor(sel and SEL_SUB or COL.muted); love.graphics.print(it.desc, x + 90, y + 52)
     chevron(x + w - 38, gy, sel and COL.dark or COL.faint)
-    y = y + h + 24
+    y = y + h + gap
   end
   footer({ { "A/Enter", "open" }, { "D-Pad", "move" }, { "B/Esc", "quit" } })
+end
+
+local function drawAbout()
+  local t = anim
+  local fade = math.max(0, math.min(1, (anim - aboutEnter) / 0.35))
+
+  -- drifting particles (drawn under the header band)
+  for _, p in ipairs(particles) do
+    setColor(COL.accent, p.a * fade)
+    love.graphics.circle("fill", p.x, p.y, p.r)
+  end
+
+  header("About", "Image Burner")
+
+  -- animated logo: pulsing rings, breathing disc, counter-rotating arcs
+  local cx, cy = 168, 214
+  for i = 1, 3 do
+    local ph = (t * 0.45 + i * 0.33) % 1
+    setColor(COL.accent, (1 - ph) * 0.22 * fade)
+    love.graphics.circle("fill", cx, cy, 34 + ph * 46)
+  end
+  local r = 60 + math.sin(t * 2) * 2
+  setColor(COL.accent, fade)
+  love.graphics.circle("fill", cx, cy, r)
+  setColor(COL.bg1, fade)
+  love.graphics.circle("fill", cx, cy, r * 0.42)
+  love.graphics.setLineWidth(3)
+  setColor(COL.accent2, 0.9 * fade)
+  love.graphics.arc("line", "open", cx, cy, r + 12, t * 1.6, t * 1.6 + 2.2)
+  setColor(COL.accent, 0.5 * fade)
+  love.graphics.arc("line", "open", cx, cy, r + 20, -t * 1.1, -t * 1.1 + 1.4)
+  love.graphics.setLineWidth(1)
+  love.graphics.setFont(FONT_L)
+  setColor(COL.bg1, fade)
+  love.graphics.printf("IB", cx - 60, cy - 16, 120, "center")
+
+  -- details
+  local x, y = 300, 150
+  love.graphics.setFont(FONT_L)
+  setColor(COL.fg, fade)
+  love.graphics.print("Image Burner", x, y)
+  love.graphics.setFont(FONT_S)
+  setColor(COL.muted, fade)
+  love.graphics.print("version " .. APP_VERSION, x, y + 34)
+
+  -- divider with a travelling highlight
+  local dy = y + 66
+  local dw = W - PAD - x
+  setColor(COL.panel2, fade)
+  love.graphics.rectangle("fill", x, dy, dw, 2, 1, 1)
+  local hl = dw * 0.25
+  local px = ((t * 0.5) % 1) * (dw + hl) - hl
+  local sx = x + math.max(0, px)
+  local sw = math.min(hl, x + dw - sx)
+  if sw > 0 then
+    setColor(COL.accent, 0.9 * fade)
+    love.graphics.rectangle("fill", sx, dy - 1, sw, 4, 2, 2)
+  end
+
+  local rows = {
+    { "Author", APP_AUTHOR, COL.fg },
+    { "Email", APP_EMAIL, COL.accent },
+    { "GitHub", APP_URL, COL.accent },
+  }
+  local ry = y + 92
+  for _, row in ipairs(rows) do
+    love.graphics.setFont(FONT_S)
+    setColor(COL.faint, fade)
+    love.graphics.print(row[1], x, ry)
+    love.graphics.setFont(FONT)
+    setColor(row[3], fade)
+    love.graphics.print(ellipsize(row[2], FONT, W - PAD - x), x, ry + 18)
+    ry = ry + 48
+  end
+
+  footer({ { "B/Esc", "back" } })
 end
 
 local function drawImgMenu()
@@ -1021,5 +1134,6 @@ function love.draw()
   elseif state == "formatopts" then drawFormatOpts()
   elseif state == "formatconfirm" then drawFormatConfirm()
   elseif state == "formatting" then drawFormatting()
+  elseif state == "about" then drawAbout()
   elseif state == "result" then drawResult() end
 end
