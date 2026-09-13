@@ -38,7 +38,18 @@ LD_LIBRARY_PATH="$PWD/libs" IB_FMTTEST=1 IB_FMTDEV=/dev/loop0 IB_FMTLAYOUT=mbr I
 - Formatter tools resolve at runtime via `formatter.toolsDir()` = `love.filesystem.getSource() .. "/tools"` (i.e. on device: `imageburner/tools/`).
 - Built-in tools: `/sbin/mkfs.fat` (FAT), `/usr/sbin/mkfs.exfat` (exFAT). Bundled static tools: `tools/mke2fs` (EXT2/EXT3), `tools/mkntfs` (NTFS). BusyBox `mke2fs` can only make ext2 — do not rely on it for EXT3.
 - Tools are built with the musl cross-toolchain; see `BUILD.md`. The ntfs-3g build links dynamically and must be relinked static (`build/ntfs-relink.sh`).
-- Distribution is a `.muxapp` (plain zip, top-level `application/Image Burner/`) installed via muOS **Archive Manager** from `/mnt/mmc/ARCHIVE`. Build it with `build/package.sh --love-dir <dir with love+libs>`; it bundles the LÖVE runtime and tools (all gitignored). Never hand-edit the archive; rebuild.
+- Distribution is a `.muxapp` — a plain zip whose **root is the app folder** (`Image Burner/...`). Do **not** wrap it in an `application/` folder: that shortcut is only for `.muxzip`, and with `.muxapp` it nests the app one level too deep. muOS's `extract.sh` extracts `.muxapp` straight into the applications dir. Build with `build/package.sh --love-dir <dir with love+libs>`; it bundles the LÖVE runtime and tools (all gitignored). Never hand-edit the archive; rebuild.
+
+## Releases & screenshots
+- Version lives in `APP_VERSION` (`imageburner/main.lua`) and the default `VERSION` in `build/package.sh` — bump **both** together, commit, tag `vX.Y.Z`, push the tag.
+- Package: `build/package.sh --love-dir ... --version X.Y.Z` → `build/ImageBurner-X.Y.Z.muxapp`; attach it to a GitHub Release (creating/updating releases needs a GitHub token/API).
+- Release notes must be **plain language and user-facing only** — no internal/dev details (tooling internals, screenshots, refactors). Describe only what a user would notice.
+- README screenshots live in `docs/screenshots/`. Regenerate with `IB_SHOT=1 sh mux_launch.sh "$PWD"` on the device (writes `/tmp/ibshot_<state>.png` then quits), copy them into `docs/screenshots/`, and reference from `README.md`.
+
+## Performance gotchas (these caused real freezes)
+- Never get a file's size by reading it. BusyBox `wc -c < file` reads the whole file; use `burner.fileSize` (`io.seek("end")`, O(1)).
+- Never use `gzip -l` for an image size: for uncompressed sizes above 4 GiB it decompresses the whole file (minutes). `burner.imageSize` reads the gzip trailer directly instead; >4 GiB returns unknown → the progress bar goes indeterminate on purpose.
+- Long operations must stay streamed/cancellable: the burn engine steps per frame; the formatter runs as a background script that reports via a status file.
 
 ## Style
 - Match the existing look: use `header`, `footer`, `drawList`, `infoCard`, `warnBand`, `drawProgressScreen`; colors come from `COL`.
