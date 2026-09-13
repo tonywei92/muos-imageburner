@@ -160,9 +160,22 @@ end
 function burner.imageSize(path)
   local low = path:lower()
   if low:match("%.gz$") then
-    local out = burner.exec("gzip -l " .. burner.sq(path))
-    local u = out:match("%d+%s+(%d+)%s+[%d%.]+%%")
-    return tonumber(u)
+    -- Read the ISIZE field from the gzip trailer (last 4 bytes, little-endian).
+    -- This is O(1). `gzip -l` is NOT usable here: for files whose uncompressed
+    -- size exceeds 4 GiB it decompresses the whole file, which can take minutes.
+    local c = burner.fileSize(path)
+    if not c or c < 18 then return nil end
+    local f = io.open(path, "rb")
+    if not f then return nil end
+    f:seek("set", c - 4)
+    local b = f:read(4)
+    f:close()
+    if not b or #b < 4 then return nil end
+    local r = b:byte(1) + b:byte(2) * 256 + b:byte(3) * 65536 + b:byte(4) * 16777216
+    -- If the trailer value is at least the compressed size it is the real size;
+    -- otherwise it wrapped past 4 GiB and we don't know the total -> unknown.
+    if r >= c then return r end
+    return nil
   elseif low:match("%.xz$") then
     local out = burner.exec("xz --robot --list " .. burner.sq(path))
     local u = out:match("\ntotals\t%d+\t%d+\t%d+\t(%d+)")
