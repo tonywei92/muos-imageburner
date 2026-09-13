@@ -28,6 +28,16 @@ install — nothing extra to set up.
 - Cancel any time; it tells you whether the card was finished or not
 - Won't write to the card muOS is running from, or an image too big for the card
 
+> **Windows install ISOs won't give you a working installer.** Image Burner writes
+> images **byte-for-byte** (a raw copy — exactly the same as `dd`, balenaEtcher, or
+> Rufus's "DD mode"). A Windows setup ISO is an optical-disc image (UDF/ISO 9660), so
+> a raw copy of it isn't a normal, readable card: Windows can't open it, and Windows
+> Setup often can't read its own files from it either. Building a *working* Windows
+> installer means extracting the ISO's contents onto a FAT32 card and splitting the
+> oversized `install.wim` — which is what Rufus and Microsoft's Media Creation Tool do
+> on a PC. So use Image Burner for Linux/OS images (muOS, Knulli, Batocera, …) and
+> `.img` files, and make Windows install media with a PC tool.
+
 **Format a card**
 - Formats: FAT12, FAT16, FAT32, exFAT, EXT2, EXT3 or NTFS
 - Optional extras: cluster size and partition style (MBR, GPT, or none)
