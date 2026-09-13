@@ -27,16 +27,8 @@ install — nothing extra to set up.
 - Progress bar with write speed and time left
 - Cancel any time; it tells you whether the card was finished or not
 - Won't write to the card muOS is running from, or an image too big for the card
-
-> **Windows install ISOs won't give you a working installer.** Image Burner writes
-> images **byte-for-byte** (a raw copy — exactly the same as `dd`, balenaEtcher, or
-> Rufus's "DD mode"). A Windows setup ISO is an optical-disc image (UDF/ISO 9660), so
-> a raw copy of it isn't a normal, readable card: Windows can't open it, and Windows
-> Setup often can't read its own files from it either. Building a *working* Windows
-> installer means extracting the ISO's contents onto a FAT32 card and splitting the
-> oversized `install.wim` — which is what Rufus and Microsoft's Media Creation Tool do
-> on a PC. So use Image Burner for Linux/OS images (muOS, Knulli, Batocera, …) and
-> `.img` files, and make Windows install media with a PC tool.
+  (when the size can be read — the real size of a `.gz` image over 4 GB can't be
+  known without unpacking it, so that check is skipped)
 
 **Format a card**
 - Formats: FAT12, FAT16, FAT32, exFAT, EXT2, EXT3 or NTFS
@@ -76,6 +68,29 @@ install — nothing extra to set up.
 
 > ⚠️ Formatting **erases the card you choose**. For burning, use a spare card too,
 > and back up anything important first.
+
+## FAQ
+
+**Can I use it to make a Windows installation USB/SD card?**
+
+No — not a working one. Image Burner writes images **byte-for-byte** (a raw copy,
+exactly the same as `dd`, balenaEtcher, or Rufus's "DD mode"). A Windows setup ISO is
+an optical-disc image (UDF/ISO 9660), so a raw copy of it isn't a normal, readable
+card: Windows can't open it, and Windows Setup often can't read its own files from it
+either. Building a *working* Windows installer means extracting the ISO's contents
+onto a FAT32 card and splitting the oversized `install.wim` — which is what Rufus and
+Microsoft's Media Creation Tool do on a PC. So use Image Burner for Linux/OS images
+(muOS, Knulli, Batocera, …) and `.img` files, and make Windows install media with a
+PC tool.
+
+**Why does the progress bar sometimes show "…" instead of a percentage?**
+
+Some compressed `.gz` images are too big to measure. gzip stores the uncompressed size
+in a 4-byte field, so for images over 4 GB it can't be trusted, and Image Burner won't
+unpack the whole file just to count it. When the total size isn't known, the bar rolls
+instead of filling and there's no percentage or time left — the write itself is
+unaffected. Uncompressed `.img`/`.iso` files and `.xz` images always show a normal
+progress bar.
 
 ## Support
 
