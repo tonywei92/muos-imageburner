@@ -33,7 +33,7 @@ local BG
 local state = "home"
 local homeIndex = 1
 local menuIndex = 1
-local APP_VERSION = "1.0.0"
+local APP_VERSION = "1.0.1"
 local APP_AUTHOR = "Tony Soekirman"
 local APP_EMAIL = "tonywei92@gmail.com"
 local APP_URL = "github.com/tonywei92/muos-imageburner"

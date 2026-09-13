@@ -15,7 +15,7 @@ set -e
 APP_NAME="Image Burner"
 REPO=$(cd "$(dirname "$0")/.." && pwd)
 TOOLS_DIR="$REPO/build"
-VERSION="1.0.0"
+VERSION="1.0.1"
 OUT=""
 
 while [ $# -gt 0 ]; do
