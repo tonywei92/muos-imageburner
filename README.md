@@ -1,3 +1,5 @@
+<p align="center"><img src="docs/icon-256.png" width="128" height="128" alt="Image Burner"></p>
+
 # Image Burner
 
 Write disk images to an SD card, and format cards, right on your handheld — no PC
